@@ -21,6 +21,7 @@ interface Subscription {
 export default function DashboardContent({ subscription }: { subscription: Subscription | null }) {
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   const fetchAdvertisers = useCallback(async () => {
@@ -35,6 +36,13 @@ export default function DashboardContent({ subscription }: { subscription: Subsc
   useEffect(() => {
     fetchAdvertisers();
   }, [fetchAdvertisers]);
+
+  async function handleScan() {
+    setScanning(true);
+    await fetch("/api/scan", { method: "POST" });
+    await fetchAdvertisers();
+    setScanning(false);
+  }
 
   async function handleDelete(id: string) {
     await fetch("/api/advertisers", {
@@ -70,6 +78,16 @@ export default function DashboardContent({ subscription }: { subscription: Subsc
             >
               {planLabel} {statusLabel && `\u00B7 ${statusLabel}`}
             </span>
+          )}
+          {advertisers.length > 0 && (
+            <button
+              onClick={handleScan}
+              disabled={scanning}
+              className="btn btn-ghost disabled:opacity-50"
+              style={{ padding: "10px 16px", fontSize: 13.5 }}
+            >
+              {scanning ? "Scanning..." : "Scan now"}
+            </button>
           )}
           <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ padding: "10px 16px", fontSize: 13.5 }}>
             + Add advertiser
