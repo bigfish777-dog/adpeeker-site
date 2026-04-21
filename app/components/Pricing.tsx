@@ -1,5 +1,11 @@
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
 const PLANS = [
   {
+    id: "starter",
     name: "Starter",
     price: "$5",
     desc: "For anyone kicking the tires on competitor intelligence.",
@@ -13,6 +19,7 @@ const PLANS = [
     cta: "Get started \u2192",
   },
   {
+    id: "pro",
     name: "Pro",
     price: "$19",
     desc: "For media buyers, DTC founders, and small agencies.",
@@ -29,6 +36,7 @@ const PLANS = [
     cta: "Start free trial \u2192",
   },
   {
+    id: "business",
     name: "Business",
     price: "$49",
     desc: "For teams tracking a full competitive landscape.",
@@ -48,6 +56,32 @@ const PLANS = [
 ];
 
 export default function Pricing() {
+  const [loading, setLoading] = useState<string | null>(null);
+
+  async function handleCheckout(planId: string) {
+    setLoading(planId);
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = "/signup";
+      return;
+    }
+
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId }),
+    });
+
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+    setLoading(null);
+  }
+
   return (
     <section className="py-24" id="pricing">
       <div className="container">
@@ -113,9 +147,7 @@ export default function Pricing() {
                   </li>
                 ))}
                 {plan.emphFeature && (
-                  <li
-                    className="text-sm text-[var(--accent)] font-medium py-2 pl-[26px] relative"
-                  >
+                  <li className="text-sm text-[var(--accent)] font-medium py-2 pl-[26px] relative">
                     <span
                       className="absolute left-0 top-[13px] w-3.5 h-3.5 rounded-full"
                       style={{
@@ -127,9 +159,13 @@ export default function Pricing() {
                 )}
               </ul>
 
-              <a href="#" className={`btn ${plan.featured ? "btn-primary" : "btn-ghost"}`}>
-                {plan.cta}
-              </a>
+              <button
+                onClick={() => handleCheckout(plan.id)}
+                disabled={loading === plan.id}
+                className={`btn ${plan.featured ? "btn-primary" : "btn-ghost"} disabled:opacity-50`}
+              >
+                {loading === plan.id ? "Redirecting..." : plan.cta}
+              </button>
             </div>
           ))}
         </div>
