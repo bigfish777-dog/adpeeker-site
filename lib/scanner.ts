@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { tagUntaggedAds } from "./tagger";
 
 const supabaseAdmin = () =>
   createClient(
@@ -196,10 +197,14 @@ export async function runFullScan() {
     }
   }
 
+  // Tag any untagged ads after scanning
+  const tagResult = await tagUntaggedAds();
+
   return {
     success: true,
     scanned: advertisers.length,
     results,
+    tagged: tagResult.tagged,
     timestamp: new Date().toISOString(),
   };
 }
