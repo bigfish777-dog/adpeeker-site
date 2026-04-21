@@ -22,6 +22,24 @@
   --warn: #FFD166;
 }
 
+@layer utilities {
+  .container {
+    width: auto !important;
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 

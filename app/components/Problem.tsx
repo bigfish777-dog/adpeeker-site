@@ -1,6 +1,6 @@
 export default function Problem() {
   return (
-    <section className="py-24 md:py-12 pt-12">
+    <section className="py-24" style={{ paddingTop: 48 }}>
       <div className="container">
         <div className="font-mono text-xs tracking-[0.12em] uppercase text-[var(--accent)] mb-4">
           The problem
@@ -9,7 +9,7 @@ export default function Problem() {
           Manual ad tracking is a part-time job you never applied for.
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-6 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-10">
           <p className="text-[19px] text-[var(--text-2)] leading-relaxed m-0" style={{ textWrap: "pretty" }}>
             You open the Meta Ad Library. You scroll. You screenshot. You forget which brand you were looking at. You close the tab.
           </p>

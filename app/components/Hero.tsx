@@ -61,7 +61,7 @@ export default function Hero() {
             Paste one URL. We handle the rest.
           </p>
 
-          <div className="flex gap-3 flex-wrap mb-4">
+          <div className="flex gap-3 flex-wrap mb-[18px]">
             <a href="#pricing" className="btn btn-primary">Start 7-day free trial &rarr;</a>
             <a href="#how-it-works" className="btn btn-ghost">See how it works</a>
           </div>
