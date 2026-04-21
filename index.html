@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AdPeeker — Watch every Meta ad your competitors run</title>
+<meta name="description" content="AdPeeker monitors competitors' Facebook and Instagram ads 4× daily, archives every creative, and delivers what matters to your inbox." />
+<meta property="og:title" content="AdPeeker — Peek at every Meta ad your competitors run" />
+<meta property="og:description" content="Competitor ad intelligence, 4× daily scans. Plans from $5/mo." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0A0A0B;
+    --bg-1: #101014;
+    --bg-2: #15151C;
+    --bg-3: #1C1C26;
+    --line: rgba(255,255,255,0.08);
+    --line-strong: rgba(255,255,255,0.14);
+    --text: #EDEDF0;
+    --text-2: #A6A6B0;
+    --text-3: #6B6B77;
+    --accent: #00E5C7;
+    --accent-dim: rgba(0,229,199,0.14);
+    --accent-glow: rgba(0,229,199,0.35);
+    --danger: #FF6B6B;
+    --warn: #FFD166;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Geist', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .mono { font-family: 'Geist Mono', ui-monospace, monospace; font-feature-settings: "ss01"; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  @media (max-width: 640px) { .container { padding: 0 20px; } }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    background: rgba(10,10,11,0.72);
+    border-bottom: 1px solid transparent;
+    transition: border-color .2s;
+  }
+  .nav.scrolled { border-bottom-color: var(--line); }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Geist Mono', monospace;
+    font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text); text-decoration: none;
+  }
+  .logo-glyph {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #062826; font-weight: 700; font-size: 14px;
+    font-family: 'Geist Mono', monospace;
+  }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a {
+    color: var(--text-2); text-decoration: none;
+    font-size: 14px; font-weight: 400;
+    transition: color .15s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links .nav-login { color: var(--text); }
+  .nav-cta {
+    background: var(--accent); color: #062826;
+    padding: 8px 14px; border-radius: 8px;
+    font-weight: 500; font-size: 13.5px;
+    border: none; cursor: pointer;
+    text-decoration: none !important;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+  .nav-mobile-toggle { display: none; background: none; border: none; color: var(--text); cursor: pointer; }
+  @media (max-width: 820px) {
+    .nav-links { display: none; }
+    .nav-mobile-toggle { display: block; }
+  }
+
+  /* ---------- BUTTONS ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 20px; border-radius: 10px;
+    font-weight: 500; font-size: 15px;
+    border: 1px solid transparent; cursor: pointer;
+    text-decoration: none;
+    transition: transform .15s, box-shadow .15s, background .15s, border-color .15s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--accent); color: #062826;
+    box-shadow: 0 0 0 1px rgba(0,229,199,0.3), 0 10px 30px -10px var(--accent-glow);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(0,229,199,0.4), 0 18px 40px -12px var(--accent-glow); }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    border-color: var(--line-strong);
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.02); }
+  .btn-sm { padding: 10px 14px; font-size: 13.5px; }
+
+  /* ---------- HERO ---------- */
+  .hero { position: relative; padding: 72px 0 96px; overflow: hidden; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(0,229,199,0.08), transparent 60%),
+      radial-gradient(700px 400px at 10% 30%, rgba(0,229,199,0.04), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: relative;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center;
+  }
+  @media (max-width: 960px) { .hero-grid { grid-template-columns: 1fr; gap: 48px; } }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 10px;
+    background: rgba(0,229,199,0.06);
+    border: 1px solid rgba(0,229,199,0.22);
+    border-radius: 999px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0,229,199,0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(0,229,199,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,229,199,0); }
+  }
+  h1.hero-title {
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    margin: 0 0 22px;
+    text-wrap: balance;
+  }
+  h1.hero-title .accent { color: var(--accent); }
+  .hero-sub {
+    font-size: 18px; color: var(--text-2);
+    max-width: 560px; margin: 0 0 32px;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+  .hero-cta-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .hero-micro {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12.5px; color: var(--text-3);
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .hero-micro span { display: inline-flex; align-items: center; gap: 6px; }
+  .hero-micro span::before { content: '·'; color: var(--text-3); }
+  .hero-micro span:first-child::before { content: ''; }
+
+  /* hero live feed card */
+  .feed-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,229,199,0.04);
+    position: relative;
+  }
+  .feed-card::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 17px;
+    background: linear-gradient(180deg, rgba(0,229,199,0.3), transparent 40%);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    padding: 1px; pointer-events: none; opacity: 0.5;
+  }
+  .feed-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 6px 14px; border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .feed-head-left { display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .feed-head-right { font-family: 'Geist Mono', monospace; font-size: 11.5px; color: var(--text-3); }
+  .feed-row {
+    display: grid; grid-template-columns: 32px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 12px 6px; border-radius: 8px;
+    transition: background .15s;
+  }
+  .feed-row:hover { background: rgba(255,255,255,0.02); }
+  .fav {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace; font-weight: 600; font-size: 13px;
+    color: #fff;
+  }
+  .feed-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .feed-brand { font-size: 14px; color: var(--text); display: flex; gap: 8px; align-items: center; }
+  .feed-action { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-2); }
+  .feed-action.up { color: var(--accent); }
+  .feed-action.down { color: var(--danger); }
+  .feed-action.new { color: var(--warn); }
+  .feed-time { font-family: 'Geist Mono', monospace; font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+
+  /* ---------- TICKER ---------- */
+  .ticker-section { padding: 32px 0 64px; position: relative; }
+  .ticker-wrap {
+    position: relative;
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    overflow: hidden;
+  }
+  .ticker-row {
+    display: flex; gap: 14px;
+    width: max-content;
+    padding: 8px 0;
+  }
+  .ticker-row.r1 { animation: scrollL 60s linear infinite; }
+  .ticker-row.r2 { animation: scrollR 70s linear infinite; margin-top: 6px; }
+  @keyframes scrollL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes scrollR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+  .tcard {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 14px 10px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.015);
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .tcard .fav { width: 26px; height: 26px; font-size: 11px; border-radius: 6px; }
+  .tcard .t-brand { color: var(--text); font-weight: 500; }
+  .tcard .t-act { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-2); }
+  .tcard .t-act.up { color: var(--accent); }
+  .tcard .t-act.down { color: var(--danger); }
+
+  /* ---------- SECTIONS ---------- */
+  section.block { padding: 96px 0; }
+  @media (max-width: 640px) { section.block { padding: 72px 0; } }
+  .section-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 1.08; letter-spacing: -0.025em; font-weight: 600;
+    margin: 0 0 20px; max-width: 820px;
+    text-wrap: balance;
+  }
+  .section-sub { color: var(--text-2); font-size: 17px; max-width: 680px; margin: 0; }
+
+  /* problem block */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 820px) { .problem-grid { grid-template-columns: 1fr; gap: 24px; } }
+  .problem-p {
+    font-size: 19px; color: var(--text-2); line-height: 1.55; margin: 0 0 18px;
+    text-wrap: pretty;
+  }
+  .problem-p strong { color: var(--text); font-weight: 500; }
+
+  /* how it works */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 28px; background: var(--bg-1);
+    position: relative; overflow: hidden;
+  }
+  .step-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; color: var(--accent);
+    letter-spacing: 0.12em;
+    margin-bottom: 20px;
+  }
+  .step-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-dim);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); margin-bottom: 20px;
+  }
+  .step h3 { font-size: 20px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.015em; }
+  .step p { color: var(--text-2); font-size: 15px; margin: 0; }
+
+  /* feature blocks */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+  @media (max-width: 960px) { .features { grid-template-columns: 1fr; } }
+  .feat {
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 32px; background: linear-gradient(180deg, var(--bg-1), var(--bg));
+    display: flex; flex-direction: column;
+    min-height: 340px;
+  }
+  .feat-visual { height: 160px; margin: -8px -8px 24px; border-radius: 10px; overflow: hidden; position: relative; }
+  .feat h3 { font-size: 20px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.015em; }
+  .feat p { color: var(--text-2); font-size: 15px; margin: 0; }
+
+  /* feature 1 visual: scan timeline */
+  .vis-timeline { background: radial-gradient(400px 200px at 50% 100%, rgba(0,229,199,0.12), transparent 60%), #0d0d12; padding: 14px; height: 100%; }
+  .vis-timeline .row { display: flex; gap: 4px; margin-bottom: 8px; }
+  .vis-timeline .tick { flex: 1; height: 10px; border-radius: 2px; background: rgba(255,255,255,0.06); }
+  .vis-timeline .tick.hit { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .vis-timeline .label { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-3); display: flex; justify-content: space-between; }
+
+  /* feature 2 visual: tags */
+  .vis-tags { background: #0d0d12; height: 100%; padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-content: center; }
+  .vis-tags .chip { padding: 6px 10px; border-radius: 999px; font-family: 'Geist Mono', monospace; font-size: 11px; border: 1px solid var(--line); color: var(--text-2); }
+  .vis-tags .chip.a { color: var(--accent); border-color: rgba(0,229,199,0.3); background: rgba(0,229,199,0.06); }
+
+  /* feature 3 visual: channels */
+  .vis-channels { background: #0d0d12; height: 100%; padding: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .vis-ch {
+    border: 1px solid var(--line); border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 4px;
+    font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-2);
+  }
+
+  /* vault */
+  .vault-wrap { margin-top: 48px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-1); overflow: hidden; }
+  .vault-toolbar {
+    display: flex; gap: 10px; padding: 16px; border-bottom: 1px solid var(--line);
+    flex-wrap: wrap; align-items: center;
+  }
+  .vault-filter {
+    font-family: 'Geist Mono', monospace; font-size: 12px;
+    padding: 7px 12px; background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: 7px;
+    color: var(--text-2); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .vault-search {
+    flex: 1; min-width: 200px;
+    padding: 7px 12px; background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: 7px;
+    color: var(--text); font-family: inherit; font-size: 13px;
+  }
+  .vault-search::placeholder { color: var(--text-3); }
+  .vault-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 18px;
+  }
+  @media (max-width: 960px) { .vault-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .vault-grid { grid-template-columns: 1fr; } }
+  .ad-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; transition: transform .15s, border-color .15s; cursor: pointer; }
+  .ad-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+  .ad-thumb { aspect-ratio: 4/5; position: relative; overflow: hidden; }
+  .ad-meta { padding: 10px 12px; }
+  .ad-brand { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text); margin-bottom: 8px; }
+  .ad-brand .fav { width: 16px; height: 16px; font-size: 8px; border-radius: 4px; }
+  .ad-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ad-tag { font-family: 'Geist Mono', monospace; font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--line); color: var(--text-2); }
+  .ad-tag.c1 { color: var(--accent); border-color: rgba(0,229,199,0.3); background: rgba(0,229,199,0.06); }
+  .ad-tag.c2 { color: #FFB4B4; border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.06); }
+  .ad-tag.c3 { color: var(--warn); border-color: rgba(255,209,102,0.3); background: rgba(255,209,102,0.06); }
+  .ad-tag.c4 { color: #B4B4FF; border-color: rgba(180,180,255,0.3); background: rgba(180,180,255,0.06); }
+  .ad-status { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+  .ad-status.live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .ad-status.paused::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--text-3); }
+
+  /* play button */
+  .play-btn {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.2);
+  }
+  .play-btn > div {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* pricing */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 56px; align-items: stretch; }
+  @media (max-width: 960px) { .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin: 56px auto 0; } }
+  .plan {
+    border: 1px solid var(--line); border-radius: 16px;
+    padding: 32px 28px; background: var(--bg-1);
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .plan.featured {
+    border-color: rgba(0,229,199,0.45);
+    background: linear-gradient(180deg, rgba(0,229,199,0.04), var(--bg-1) 60%);
+    box-shadow: 0 0 0 1px rgba(0,229,199,0.25), 0 40px 80px -40px var(--accent-glow);
+  }
+  .plan-ribbon {
+    position: absolute; top: -10px; left: 28px;
+    background: var(--accent); color: #062826;
+    padding: 4px 10px; border-radius: 6px;
+    font-family: 'Geist Mono', monospace; font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .plan-name { font-family: 'Geist Mono', monospace; font-size: 13px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+  .plan-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+  .plan-price .amount { font-size: 44px; font-weight: 600; letter-spacing: -0.02em; font-family: 'Geist', sans-serif; }
+  .plan-price .per { color: var(--text-3); font-size: 14px; font-family: 'Geist Mono', monospace; }
+  .plan-desc { color: var(--text-2); font-size: 14px; margin: 0 0 24px; min-height: 40px; }
+  .plan-features { list-style: none; padding: 0; margin: 0 0 28px; flex: 1; }
+  .plan-features li {
+    font-size: 14px; color: var(--text); padding: 8px 0 8px 26px;
+    position: relative; border-bottom: 1px dashed var(--line);
+  }
+  .plan-features li:last-child { border-bottom: none; }
+  .plan-features li::before {
+    content: ''; position: absolute; left: 0; top: 13px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent-dim);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none'><path d='M2 5.2L4 7L8 3' stroke='%2300E5C7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-size: 10px; background-repeat: no-repeat; background-position: center;
+  }
+  .plan-features li.emph { color: var(--accent); font-weight: 500; }
+  .plan-footnote { text-align: center; color: var(--text-3); font-size: 13px; font-family: 'Geist Mono', monospace; margin-top: 24px; }
+
+  /* FAQ */
+  .faq-list { margin-top: 40px; border-top: 1px solid var(--line); }
+  .faq-item { border-bottom: 1px solid var(--line); }
+  .faq-q {
+    width: 100%; background: none; border: none; padding: 22px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    color: var(--text); font-size: 17px; font-family: inherit; font-weight: 500;
+    cursor: pointer; text-align: left; letter-spacing: -0.01em;
+  }
+  .faq-q .chev { transition: transform .2s; color: var(--text-3); flex-shrink: 0; margin-left: 16px; }
+  .faq-item.open .faq-q .chev { transform: rotate(180deg); color: var(--accent); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s ease; }
+  .faq-item.open .faq-a { max-height: 300px; padding: 0 8px 24px; }
+  .faq-a p { color: var(--text-2); font-size: 15.5px; margin: 0; line-height: 1.6; }
+
+  /* final CTA */
+  .final-cta {
+    background: radial-gradient(600px 300px at 50% 0%, rgba(0,229,199,0.1), transparent 70%), var(--bg-1);
+    border-top: 1px solid rgba(0,229,199,0.2);
+    border-bottom: 1px solid rgba(0,229,199,0.2);
+    padding: 96px 0;
+    text-align: center;
+  }
+  .final-cta h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.1; letter-spacing: -0.025em; font-weight: 600;
+    margin: 0 auto 16px; max-width: 760px;
+    text-wrap: balance;
+  }
+  .final-cta .section-sub { margin: 0 auto 32px; }
+  .final-cta .hero-micro { justify-content: center; margin-top: 20px; }
+
+  /* footer */
+  footer {
+    padding: 40px 0; border-top: 1px solid var(--line);
+    color: var(--text-3);
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .footer-left { display: flex; align-items: center; gap: 16px; font-family: 'Geist Mono', monospace; font-size: 12.5px; }
+  .footer-right { display: flex; gap: 22px; flex-wrap: wrap; }
+  .footer-right a { color: var(--text-3); font-size: 13px; text-decoration: none; }
+  .footer-right a:hover { color: var(--text-2); }
+
+  /* Tweaks panel */
+  #tweaks-panel {
+    position: fixed; right: 20px; bottom: 20px; z-index: 100;
+    background: var(--bg-2); border: 1px solid var(--line-strong);
+    border-radius: 12px; padding: 16px;
+    min-width: 260px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    display: none;
+  }
+  #tweaks-panel.active { display: block; }
+  #tweaks-panel h4 { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin: 0 0 14px; }
+  .tweak-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 13px; }
+  .tweak-row label { color: var(--text-2); }
+  .tweak-swatches { display: flex; gap: 6px; }
+  .tweak-sw { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--line-strong); cursor: pointer; }
+  .tweak-sw.sel { outline: 2px solid var(--text); outline-offset: 2px; }
+  .tweak-seg { display: inline-flex; background: var(--bg-3); border-radius: 6px; padding: 2px; }
+  .tweak-seg button { background: none; border: none; color: var(--text-2); padding: 4px 10px; border-radius: 5px; font-family: 'Geist Mono', monospace; font-size: 11px; cursor: pointer; }
+  .tweak-seg button.sel { background: var(--bg); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Tweakable defaults -->
+<script>
+  window.ADPEEKER_TWEAKS = /*EDITMODE-BEGIN*/{
+    "accent": "#00E5C7",
+    "heroStyle": "split",
+    "density": "comfy"
+  }/*EDITMODE-END*/;
+</script>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="logo" href="#top">
+      <span class="logo-glyph">P</span>
+      adpeeker
+    </a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#" class="nav-login">Log in</a>
+      <a href="#" class="nav-cta">Start free trial</a>
+    </nav>
+    <button class="nav-mobile-toggle" aria-label="menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="eyebrow">
+        <span class="live-dot"></span>
+        <span>Live competitor intelligence</span>
+      </div>
+      <h1 class="hero-title">Peek at every Meta ad your competitors <span class="accent">run.</span></h1>
+      <p class="hero-sub">AdPeeker monitors your competitors' Facebook and Instagram ads 4× daily, archives every creative to your vault, and delivers what matters to your inbox. Paste one URL. We handle the rest.</p>
+      <div class="hero-cta-row">
+        <a href="#pricing" class="btn btn-primary">Start 7-day free trial →</a>
+        <a href="#how-it-works" class="btn btn-ghost">See how it works</a>
+      </div>
+      <div class="hero-micro">
+        <span>No credit card</span>
+        <span>Plans from $5/mo</span>
+        <span>60-second setup</span>
+      </div>
+    </div>
+
+    <!-- LIVE FEED MOCK -->
+    <div class="feed-card" id="feed-card">
+      <div class="feed-head">
+        <div class="feed-head-left"><span class="live-dot"></span> Live feed</div>
+        <div class="feed-head-right">Last scan: 12s ago</div>
+      </div>
+      <div id="feed-rows"></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<section class="ticker-section">
+  <div class="ticker-wrap">
+    <div class="ticker-row r1" id="ticker-r1"></div>
+    <div class="ticker-row r2" id="ticker-r2"></div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="block" style="padding-top: 48px;">
+  <div class="container">
+    <div class="section-eyebrow">The problem</div>
+    <h2 class="section-title">Manual ad tracking is a part-time job you never applied for.</h2>
+    <div class="problem-grid" style="margin-top: 40px;">
+      <div>
+        <p class="problem-p">You open the Meta Ad Library. You scroll. You screenshot. You forget which brand you were looking at. You close the tab.</p>
+      </div>
+      <div>
+        <p class="problem-p">Meanwhile, your competitors launched three new creatives this morning, paused two losers by lunch, and shipped a new landing page before you finished your coffee. <strong>You'll never see any of it — unless something watches for you.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="block" id="how-it-works">
+  <div class="container">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Up and running in 60 seconds.</h2>
+    <p class="section-sub">Three steps. No onboarding call. No "implementation specialist."</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">STEP 01</div>
+        <div class="step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M10 14L21 3M21 3h-7M21 3v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Paste the URL.</h3>
+        <p>Grab any advertiser URL from the Meta Ad Library. Drop it into AdPeeker. That's the setup.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">STEP 02</div>
+        <div class="step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2M12 20v2M22 12h-2M4 12H2M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>We watch, all day.</h3>
+        <p>Our crawler checks every tracked advertiser four times a day. New launches, paused creatives, landing page changes — we catch them all.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">STEP 03</div>
+        <div class="step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H5.5L4 17.5V4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 12h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Get the digest.</h3>
+        <p>Daily email, Slack pings, or webhooks. Review what's moving, ignore what isn't, stay ahead of the test cycle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="block" id="features" style="background: linear-gradient(180deg, transparent, rgba(0,229,199,0.015), transparent);">
+  <div class="container">
+    <div class="section-eyebrow">Why AdPeeker</div>
+    <h2 class="section-title">Built for people who actually have to ship ads.</h2>
+    <div class="features">
+      <div class="feat">
+        <div class="feat-visual vis-timeline">
+          <div class="label"><span>12AM</span><span>6AM</span><span>12PM</span><span>6PM</span></div>
+          <div class="row" style="margin-top: 8px;">
+            <div class="tick hit"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+            <div class="tick hit"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+            <div class="tick hit"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+            <div class="tick hit"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div><div class="tick"></div>
+          </div>
+          <div style="font-family: 'Geist Mono',monospace; font-size: 11px; color: var(--accent); margin-top: 14px;">4 scans/day</div>
+          <div style="font-family: 'Geist Mono',monospace; font-size: 10.5px; color: var(--text-3); margin-top: 2px;">vs. 1/day category avg</div>
+        </div>
+        <h3>Scans that keep up with the test cycle.</h3>
+        <p>Most competitor tools scan once per day. By the time you see a winning ad, it's been running 23 hours and your competitor has already scaled it. AdPeeker scans 4× daily so you catch tests while they're fresh.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-visual vis-tags">
+          <span class="chip a">UGC</span>
+          <span class="chip">Social proof</span>
+          <span class="chip a">Discount-led</span>
+          <span class="chip">Founder POV</span>
+          <span class="chip">Problem-agitate</span>
+          <span class="chip a">Before / after</span>
+          <span class="chip">Testimonial</span>
+          <span class="chip">Product demo</span>
+          <span class="chip a">Auto-transcribed</span>
+        </div>
+        <h3>AI that reads the ads, not just stores them.</h3>
+        <p>Every video ad is auto-transcribed. Every creative is tagged by angle: UGC, social proof, discount-led, founder POV, problem-agitate. Every week you get an AI-written summary of what's shifting in your competitor set.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-visual vis-channels">
+          <div class="vis-ch">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 7l9 7 9-7" stroke="currentColor" stroke-width="1.6"/></svg>
+            Email
+          </div>
+          <div class="vis-ch">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14 3v6M18 9h-8M18 14v7M14 14h7M9 18H3M9 14v7M5 10v-4M10 5H6a3 3 0 000 6h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Slack
+          </div>
+          <div class="vis-ch">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 12h8m0 0l-3-3m3 3l-3 3M16 6h4v12h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Webhook
+          </div>
+        </div>
+        <h3>Alerts that fit your actual workflow.</h3>
+        <p>Email digests. Slack channel pings. Webhooks into your own stack. All on every paid plan, not gated behind a $97/mo enterprise tier.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VAULT -->
+<section class="block">
+  <div class="container">
+    <div class="section-eyebrow">Creative vault</div>
+    <h2 class="section-title">Your Creative Vault. Everything. Forever.</h2>
+    <p class="section-sub">Every ad we scrape is archived to your vault — high-res video, images, copy, landing URLs — accessible long after the advertiser takes it down.</p>
+
+    <div class="vault-wrap">
+      <div class="vault-toolbar">
+        <button class="vault-filter">All advertisers <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button class="vault-filter">All formats <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button class="vault-filter">All tags <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button class="vault-filter">Last 30 days <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <input class="vault-search" placeholder="Search copy, landing URL, or tag…" />
+      </div>
+      <div class="vault-grid" id="vault-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="block" id="pricing">
+  <div class="container">
+    <div class="section-eyebrow">Pricing</div>
+    <h2 class="section-title">Simple pricing. No overages. No "contact sales."</h2>
+    <p class="section-sub">Cancel in two clicks. Keep your vault either way.</p>
+
+    <div class="pricing-grid">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price"><span class="amount">$5</span><span class="per">/month</span></div>
+        <p class="plan-desc">For anyone kicking the tires on competitor intelligence.</p>
+        <ul class="plan-features">
+          <li>3 tracked advertisers</li>
+          <li>4× daily scans</li>
+          <li>Permanent creative vault</li>
+          <li>Email digest (daily or weekly)</li>
+        </ul>
+        <a href="#" class="btn btn-ghost">Get started →</a>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-ribbon">MOST POPULAR</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><span class="amount">$19</span><span class="per">/month</span></div>
+        <p class="plan-desc">For media buyers, DTC founders, and small agencies.</p>
+        <ul class="plan-features">
+          <li>15 tracked advertisers</li>
+          <li>4× daily scans</li>
+          <li>Permanent creative vault</li>
+          <li>Email + Slack alerts</li>
+          <li>AI transcription & creative tagging</li>
+          <li>Weekly AI strategy summary</li>
+          <li class="emph">7-day free trial, no credit card</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Start free trial →</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Business</div>
+        <div class="plan-price"><span class="amount">$49</span><span class="per">/month</span></div>
+        <p class="plan-desc">For teams tracking a full competitive landscape.</p>
+        <ul class="plan-features">
+          <li>50 tracked advertisers</li>
+          <li>4× daily scans</li>
+          <li>Permanent creative vault</li>
+          <li>Email + Slack + Webhook alerts</li>
+          <li>AI transcription & creative tagging</li>
+          <li>Weekly AI strategy summary</li>
+          <li>API access</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-ghost">Get started →</a>
+      </div>
+    </div>
+    <p class="plan-footnote">All plans: cancel anytime. No overage charges. Unlimited users on Business.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block" id="faq">
+  <div class="container" style="max-width: 820px;">
+    <div class="section-eyebrow">FAQ</div>
+    <h2 class="section-title">The things people actually ask.</h2>
+    <div class="faq-list" id="faq-list"></div>
+  </div>
+</section>
+
+</main>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Your competitor's next winning ad is probably launching right now.</h2>
+    <p class="section-sub" style="margin-left:auto; margin-right:auto;">Find out the same day they do.</p>
+    <div style="margin-top: 32px;"><a href="#" class="btn btn-primary">Start 7-day free trial →</a></div>
+    <div class="hero-micro">
+      <span>Plans from $5/month</span>
+      <span>No card required for trial</span>
+      <span>Setup in 60 seconds</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <a class="logo" href="#top" style="font-size: 15px;"><span class="logo-glyph" style="width:18px; height:18px; font-size: 11px;">P</span>adpeeker</a>
+      <span>© 2026 AdPeeker. All rights reserved.</span>
+    </div>
+    <div class="footer-right">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- TWEAKS PANEL -->
+<div id="tweaks-panel">
+  <h4>Tweaks</h4>
+  <div class="tweak-row">
+    <label>Accent</label>
+    <div class="tweak-swatches" id="tw-accent">
+      <div class="tweak-sw sel" data-val="#00E5C7" style="background:#00E5C7"></div>
+      <div class="tweak-sw" data-val="#A78BFA" style="background:#A78BFA"></div>
+      <div class="tweak-sw" data-val="#F59E0B" style="background:#F59E0B"></div>
+      <div class="tweak-sw" data-val="#F472B6" style="background:#F472B6"></div>
+      <div class="tweak-sw" data-val="#60A5FA" style="background:#60A5FA"></div>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <label>Density</label>
+    <div class="tweak-seg" id="tw-density">
+      <button data-val="compact">compact</button>
+      <button class="sel" data-val="comfy">comfy</button>
+      <button data-val="roomy">roomy</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <label>Hero feed</label>
+    <div class="tweak-seg" id="tw-hero">
+      <button class="sel" data-val="split">split</button>
+      <button data-val="stacked">stacked</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ============== DATA ============== */
+  const BRANDS = [
+    { name: "Rhode",          bg: "#C9A27E", letter: "R" },
+    { name: "Patagonia",      bg: "#2E5E3E", letter: "P" },
+    { name: "Gymshark",       bg: "#1A1A1A", letter: "G" },
+    { name: "Allbirds",       bg: "#7FA97C", letter: "A" },
+    { name: "Glossier",       bg: "#F7C6BC", letter: "G" },
+    { name: "Liquid Death",   bg: "#0E0E0E", letter: "L" },
+    { name: "Fenty",          bg: "#B81E3E", letter: "F" },
+    { name: "Oatly",          bg: "#FFEBCC", letter: "O" },
+    { name: "On Running",     bg: "#E85A2B", letter: "O" },
+    { name: "Chubbies",       bg: "#F0B93B", letter: "C" },
+    { name: "Ridge Wallet",   bg: "#3C3C3C", letter: "R" },
+    { name: "Snowe",          bg: "#D4DDE3", letter: "S" },
+    { name: "Brooklinen",     bg: "#5B7D8C", letter: "B" },
+    { name: "Olipop",         bg: "#E87F5A", letter: "O" },
+    { name: "Magic Spoon",    bg: "#9B5CF0", letter: "M" },
+    { name: "Cometeer",       bg: "#1F3D5B", letter: "C" },
+    { name: "Haus",           bg: "#B8926B", letter: "H" },
+    { name: "Kosas",          bg: "#F5D5C4", letter: "K" },
+    { name: "Tracksmith",     bg: "#3D2B1F", letter: "T" },
+    { name: "Warby Parker",   bg: "#2A4A5E", letter: "W" },
+  ];
+  const ACTIONS = [
+    { sym: "▲", text: b => `${b} — 28 new ads`,             cls: "up",   time: "2m ago" },
+    { sym: "✕", text: b => `${b} — paused 14 ads`,          cls: "down", time: "7m ago" },
+    { sym: "◆", text: b => `${b} — new landing page`,       cls: "new",  time: "12m ago" },
+    { sym: "▲", text: b => `${b} — 19 new ads`,             cls: "up",   time: "18m ago" },
+    { sym: "▲", text: b => `${b} — 7 new ads`,              cls: "up",   time: "23m ago" },
+    { sym: "✕", text: b => `${b} — paused 3 ads`,           cls: "down", time: "31m ago" },
+    { sym: "◆", text: b => `${b} — landing page changed`,   cls: "new",  time: "44m ago" },
+  ];
+
+  /* ============== UTIL: fav chip ============== */
+  function favEl(b, cls = "") {
+    const d = document.createElement("div");
+    d.className = `fav ${cls}`;
+    d.style.background = b.bg;
+    d.style.color = isLight(b.bg) ? "#111" : "#fff";
+    d.textContent = b.letter;
+    return d;
+  }
+  function isLight(hex) {
+    const c = hex.replace('#',''); const r=parseInt(c.slice(0,2),16), g=parseInt(c.slice(2,4),16), bl=parseInt(c.slice(4,6),16);
+    return (r*0.299 + g*0.587 + bl*0.114) > 170;
+  }
+
+  /* ============== HERO FEED ============== */
+  function buildFeed() {
+    const rows = [
+      { brand: BRANDS[0], act: { sym:"▲", text: "Rhode — new landing page detected", cls:"new",  time:"2m ago" } },
+      { brand: BRANDS[1], act: { sym:"▲", text: "Patagonia — 28 new ads",             cls:"up",   time:"7m ago" } },
+      { brand: BRANDS[2], act: { sym:"✕", text: "Gymshark — paused 14 ads",           cls:"down", time:"12m ago" } },
+      { brand: BRANDS[3], act: { sym:"▲", text: "Allbirds — 19 new ads",              cls:"up",   time:"18m ago" } },
+      { brand: BRANDS[13],act: { sym:"◆", text: "Olipop — new creative angle (UGC)",  cls:"new",  time:"24m ago" } },
+      { brand: BRANDS[14],act: { sym:"▲", text: "Magic Spoon — 6 new ads",            cls:"up",   time:"31m ago" } },
+    ];
+    const host = document.getElementById("feed-rows");
+    rows.forEach((r, i) => {
+      const el = document.createElement("div");
+      el.className = "feed-row";
+      el.style.animationDelay = (i*80) + "ms";
+      el.appendChild(favEl(r.brand));
+      const body = document.createElement("div");
+      body.className = "feed-body";
+      body.innerHTML = `<div class="feed-brand">${r.brand.name}</div><div class="feed-action ${r.act.cls}"><span style="margin-right:6px">${r.act.sym}</span>${r.act.text.split("— ")[1] || r.act.text}</div>`;
+      el.appendChild(body);
+      const time = document.createElement("div");
+      time.className = "feed-time";
+      time.textContent = r.act.time;
+      el.appendChild(time);
+      host.appendChild(el);
+    });
+  }
+
+  /* ============== TICKER ============== */
+  function buildTicker() {
+    const makeCards = (list) => list.map(b => {
+      const a = ACTIONS[(b.name.length) % ACTIONS.length];
+      const card = document.createElement("div");
+      card.className = "tcard";
+      card.appendChild(favEl(b));
+      card.innerHTML += `<span class="t-brand">${b.name}</span><span class="t-act ${a.cls}">${a.sym} ${a.text(b.name).split("— ")[1] || "active"}</span>`;
+      return card;
+    });
+    const r1 = document.getElementById("ticker-r1");
+    const r2 = document.getElementById("ticker-r2");
+    const h1 = BRANDS.slice(0,10);
+    const h2 = BRANDS.slice(10,20);
+    // duplicate for infinite scroll
+    [...h1, ...h1].forEach(b => r1.appendChild(makeSingleCard(b, 0)));
+    [...h2, ...h2].forEach(b => r2.appendChild(makeSingleCard(b, 1)));
+  }
+  function makeSingleCard(b, rowIx) {
+    const card = document.createElement("div");
+    card.className = "tcard";
+    card.appendChild(favEl(b));
+    const spanB = document.createElement("span"); spanB.className="t-brand"; spanB.textContent = b.name;
+    const spanA = document.createElement("span");
+    const variants = [
+      { sym:"▲", text:"active", cls:"up" },
+      { sym:"▲", text:"12 new", cls:"up" },
+      { sym:"✕", text:"paused 4", cls:"down" },
+      { sym:"◆", text:"LP change", cls:"" },
+      { sym:"▲", text:"3 new", cls:"up" },
+      { sym:"✕", text:"paused 8", cls:"down" },
+      { sym:"▲", text:"running 23d", cls:"up" },
+    ];
+    const v = variants[(b.name.length + rowIx) % variants.length];
+    spanA.className = "t-act " + v.cls;
+    spanA.textContent = `${v.sym} ${v.text}`;
+    card.appendChild(spanB); card.appendChild(spanA);
+    return card;
+  }
+
+  /* ============== VAULT GRID ============== */
+  const VAULT_ITEMS = [
+    { brand: BRANDS[8], tags: [{l:"UGC",c:"c1"}], status:"Running 41 days", live:true,  type:"video", bg:"linear-gradient(135deg, #E85A2B, #7A2810)" },
+    { brand: BRANDS[4], tags: [{l:"Social proof",c:"c4"}, {l:"UGC",c:"c1"}], status:"Running 12 days", live:true, type:"image", bg:"linear-gradient(135deg, #F7C6BC, #C07F77)" },
+    { brand: BRANDS[5], tags: [{l:"Founder POV",c:"c3"}], status:"Paused yesterday", live:false, type:"video", bg:"linear-gradient(135deg, #0E0E0E, #2A2A2A)" },
+    { brand: BRANDS[13],tags: [{l:"Discount",c:"c2"}, {l:"UGC",c:"c1"}], status:"Running 6 days", live:true, type:"image", bg:"linear-gradient(135deg, #E87F5A, #A0452D)" },
+    { brand: BRANDS[1], tags: [{l:"Problem-agitate",c:"c3"}], status:"Running 89 days", live:true, type:"video", bg:"linear-gradient(135deg, #2E5E3E, #133322)" },
+    { brand: BRANDS[14],tags: [{l:"UGC",c:"c1"}, {l:"Discount",c:"c2"}], status:"Running 3 days", live:true, type:"image", bg:"linear-gradient(135deg, #9B5CF0, #4A2478)" },
+    { brand: BRANDS[9], tags: [{l:"Social proof",c:"c4"}], status:"Paused 2d ago", live:false, type:"video", bg:"linear-gradient(135deg, #F0B93B, #8A6815)" },
+    { brand: BRANDS[19],tags: [{l:"Founder POV",c:"c3"}], status:"Running 23 days", live:true, type:"image", bg:"linear-gradient(135deg, #2A4A5E, #122732)" },
+  ];
+  function buildVault() {
+    const grid = document.getElementById("vault-grid");
+    VAULT_ITEMS.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "ad-card";
+      // Thumbnail with striped placeholder pattern
+      const thumb = document.createElement("div");
+      thumb.className = "ad-thumb";
+      thumb.style.background = item.bg;
+      thumb.innerHTML = `
+        <div style="position:absolute; inset:0; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 8px, transparent 8px 18px);"></div>
+        <div style="position:absolute; left:10px; top:10px; font-family:'Geist Mono',monospace; font-size:9.5px; padding:3px 6px; background:rgba(0,0,0,0.55); border-radius:4px; color:rgba(255,255,255,0.8); letter-spacing:0.06em;">${item.type === "video" ? "VIDEO" : "IMAGE"}</div>
+        ${item.type === "video" ? `
+        <div class="play-btn"><div><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M3 2l7 4-7 4V2z" fill="white"/></svg></div></div>
+        ` : ""}
+      `;
+      card.appendChild(thumb);
+      const meta = document.createElement("div");
+      meta.className = "ad-meta";
+      const brand = document.createElement("div");
+      brand.className = "ad-brand";
+      brand.appendChild(favEl(item.brand));
+      const bn = document.createElement("span"); bn.textContent = item.brand.name;
+      brand.appendChild(bn);
+      meta.appendChild(brand);
+      const tags = document.createElement("div");
+      tags.className = "ad-tags";
+      item.tags.forEach(t => {
+        const chip = document.createElement("span");
+        chip.className = `ad-tag ${t.c}`;
+        chip.textContent = t.l;
+        tags.appendChild(chip);
+      });
+      meta.appendChild(tags);
+      const status = document.createElement("div");
+      status.className = `ad-status ${item.live ? "live" : "paused"}`;
+      status.textContent = item.status;
+      meta.appendChild(status);
+      card.appendChild(meta);
+      grid.appendChild(card);
+    });
+  }
+
+  /* ============== FAQ ============== */
+  const FAQS = [
+    { q: "What platforms does AdPeeker support?", a: "Today: Meta (Facebook + Instagram) via the Meta Ad Library. On the roadmap: TikTok Creative Center, LinkedIn Ad Library, Google Ads Transparency Center. Subscribers get new platforms as they launch." },
+    { q: "How quickly do you detect new ads?", a: "We scan every tracked advertiser four times per day. New launches, paused creatives, and landing page changes typically show up in your vault within a few hours of going live." },
+    { q: "What happens if an advertiser deletes their ad?", a: "If we've archived it, it stays in your vault forever — full-res video, images, copy, and landing URLs. The advertiser can't un-ring that bell." },
+    { q: "Can I export ads and data?", a: "Yes. CSV export on all plans. Direct video and image downloads. API access on Business." },
+    { q: "Is this legal?", a: "AdPeeker uses the publicly available Meta Ad Library, which Meta operates for advertising transparency. We only store and organize information that's already public." },
+    { q: "Do I need a credit card for the trial?", a: "No. The 7-day Pro trial doesn't require a card. We'll only ask when the trial ends and you decide to continue." },
+    { q: "Can I cancel anytime?", a: "Yes. Monthly billing, two-click cancel, no retention calls." },
+  ];
+  function buildFAQ() {
+    const list = document.getElementById("faq-list");
+    FAQS.forEach((f, i) => {
+      const item = document.createElement("div");
+      item.className = "faq-item";
+      item.innerHTML = `
+        <button class="faq-q" aria-expanded="false">
+          <span>${f.q}</span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>${f.a}</p></div>
+      `;
+      item.querySelector(".faq-q").addEventListener("click", () => {
+        item.classList.toggle("open");
+      });
+      list.appendChild(item);
+    });
+  }
+
+  /* ============== NAV SCROLL STATE ============== */
+  window.addEventListener("scroll", () => {
+    const n = document.getElementById("nav");
+    if (window.scrollY > 8) n.classList.add("scrolled"); else n.classList.remove("scrolled");
+  });
+
+  /* ============== SIMULATE FEED UPDATES ============== */
+  function simulateFeed() {
+    const head = document.querySelector('.feed-head-right');
+    if (!head) return;
+    let s = 12;
+    setInterval(() => {
+      s = (s + 3) % 240;
+      head.textContent = `Last scan: ${s}s ago`;
+    }, 3000);
+  }
+
+  /* ============== TWEAKS ============== */
+  const TW = window.ADPEEKER_TWEAKS;
+  function applyTweaks() {
+    document.documentElement.style.setProperty('--accent', TW.accent);
+    // compute dim + glow from hex
+    const hex = TW.accent.replace('#','');
+    const r = parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+    document.documentElement.style.setProperty('--accent-dim', `rgba(${r},${g},${b},0.14)`);
+    document.documentElement.style.setProperty('--accent-glow', `rgba(${r},${g},${b},0.35)`);
+    // density
+    const bodyPad = { compact: 56, comfy: 96, roomy: 128 }[TW.density] || 96;
+    document.querySelectorAll('section.block').forEach(s => s.style.paddingTop = s.style.paddingBottom = bodyPad + 'px');
+    // hero style
+    const grid = document.querySelector('.hero-grid');
+    if (grid) grid.style.gridTemplateColumns = (TW.heroStyle === 'stacked') ? '1fr' : '';
+  }
+  function wireTweaks() {
+    // accent
+    document.querySelectorAll('#tw-accent .tweak-sw').forEach(sw => {
+      sw.addEventListener('click', () => {
+        document.querySelectorAll('#tw-accent .tweak-sw').forEach(s => s.classList.remove('sel'));
+        sw.classList.add('sel');
+        TW.accent = sw.dataset.val;
+        persist({ accent: TW.accent });
+        applyTweaks();
+      });
+    });
+    // density
+    document.querySelectorAll('#tw-density button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tw-density button').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        TW.density = btn.dataset.val;
+        persist({ density: TW.density });
+        applyTweaks();
+      });
+    });
+    // hero style
+    document.querySelectorAll('#tw-hero button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tw-hero button').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        TW.heroStyle = btn.dataset.val;
+        persist({ heroStyle: TW.heroStyle });
+        applyTweaks();
+      });
+    });
+    // sync selected from initial state
+    document.querySelectorAll('#tw-accent .tweak-sw').forEach(s => s.classList.toggle('sel', s.dataset.val === TW.accent));
+    document.querySelectorAll('#tw-density button').forEach(b => b.classList.toggle('sel', b.dataset.val === TW.density));
+    document.querySelectorAll('#tw-hero button').forEach(b => b.classList.toggle('sel', b.dataset.val === TW.heroStyle));
+  }
+  function persist(edits) {
+    try {
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    } catch(e) {}
+  }
+  // Edit mode protocol — register listener FIRST
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === '__activate_edit_mode') document.getElementById('tweaks-panel').classList.add('active');
+    if (e.data.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('active');
+  });
+  // then announce
+  try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch(e) {}
+
+  /* ============== INIT ============== */
+  document.addEventListener("DOMContentLoaded", () => {
+    buildFeed();
+    buildTicker();
+    buildVault();
+    buildFAQ();
+    simulateFeed();
+    applyTweaks();
+    wireTweaks();
+  });
+</script>
+
+</body>
+</html>
