@@ -34,9 +34,9 @@ export default function Nav() {
           <a href="#how-it-works" className="text-[var(--text-2)] text-sm no-underline hover:text-[var(--text)] transition-colors">How it works</a>
           <a href="#pricing" className="text-[var(--text-2)] text-sm no-underline hover:text-[var(--text)] transition-colors">Pricing</a>
           <a href="#faq" className="text-[var(--text-2)] text-sm no-underline hover:text-[var(--text)] transition-colors">FAQ</a>
-          <a href="#" className="text-[var(--text)] text-sm no-underline">Log in</a>
+          <a href="/login" className="text-[var(--text)] text-sm no-underline">Log in</a>
           <a
-            href="#"
+            href="/signup"
             className="bg-[var(--accent)] text-[#062826] px-3.5 py-2 rounded-lg font-medium text-[13.5px] no-underline transition-all hover:-translate-y-px hover:shadow-[0_6px_20px_var(--accent-glow)]"
           >
             Start free trial
